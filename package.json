@@ -28,7 +28,6 @@
     "lodash-es": "^4.17.21",
     "nerf-dart": "^1.0.0",
     "normalize-url": "^9.0.0",
-    "npm": "^11.6.2",
     "rc": "^1.2.8",
     "read-pkg": "^10.0.0",
     "registry-auth-token": "^5.0.0",
@@ -46,7 +45,6 @@
     "p-retry": "9.0.0",
     "prettier": "3.10.1",
     "publint": "0.3.25",
-    "semantic-release": "26.0.1",
     "sinon": "22.1.0",
     "stream-buffers": "3.0.3",
     "strip-ansi": "7.2.0",
@@ -122,5 +120,9 @@
       "github>semantic-release/.github:renovate-config"
     ]
   },
-  "packageManager": "npm@11.21.3"
+  "packageManager": "npm@11.21.3",
+  "overrides": {
+    "glob": "14.0.6",
+    "minimatch": "11.0.9"
+  }
 }

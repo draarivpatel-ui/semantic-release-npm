@@ -1,16 +1,12 @@
-name: Test
-"on":
-  push:
-    branches:
-      - master
-      - renovate/**
-  pull_request:
-    types:
-      - opened
-      - synchronize
+name: CI
 
-permissions:
-  contents: read
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions: {}
 
 env:
   FORCE_COLOR: 1
@@ -18,44 +14,58 @@ env:
 
 jobs:
   test_matrix:
+    name: test_matrix
     strategy:
+      fail-fast: false
       matrix:
-        node-version:
-          - 22.14.0
-          - 22
-          - 24
-        os:
-          - ubuntu-latest
-    runs-on: "${{ matrix.os }}"
+        node-version: [22.14.0, 22, 24]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: "Use Node.js ${{ matrix.node-version }}"
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "${{ matrix.node-version }}"
+          node-version: ${{ matrix.node-version }}
           cache: npm
-      - run: npm clean-install
-      - run: corepack npm audit signatures
-      - run: npm test
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Audit package signatures
+        run: corepack npm audit signatures
+      - name: Run test suite
+        run: npm test
 
   test_dev:
-    runs-on: ubuntu-latest
+    name: test_dev
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js from .nvmrc
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm clean-install
-      - run: corepack npm audit signatures
-      - run: npm test
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Audit package signatures
+        run: corepack npm audit signatures
+      - name: Run test suite
+        run: npm test
 
   test:
-    runs-on: ubuntu-latest
-    needs:
-      - test_dev
-      - test_matrix
-    if: ${{ !cancelled() }}
+    name: test
+    runs-on: ubuntu-24.04
+    needs: [test_dev, test_matrix]
+    permissions: {}
     steps:
       - name: All matrix versions passed
         if: ${{ !(contains(needs.*.result, 'failure')) }}
